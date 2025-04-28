@@ -1,0 +1,20 @@
+{
+    "version": 1,
+    "editor": "wokwi",
+    "parts": [
+      { "type": "wokwi-arduino-nano", "id": "uno", "top": 200, "left": 20, "attrs": {} },
+      {
+        "type": "wokwi-pushbutton",
+        "id": "btn8",
+        "top": 89.9,
+        "left": 419.9,
+        "rotate": 90,
+        "attrs": { "color": "green", "key": "ArrowRight", "label": "enter" }
+      }
+    ],
+    "connections": [
+      [ "uno:GND.1", "btn8:2.r", "black", [ "v25.6", "h286.9" ] ],
+      [ "btn8:1.r", "uno:A2", "green", [ "v144.2", "h-336" ] ]
+    ],
+    "dependencies": {}
+  }

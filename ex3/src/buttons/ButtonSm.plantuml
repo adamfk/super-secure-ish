@@ -1,0 +1,94 @@
+@startuml ButtonSm
+
+' /////////////////////////// Styles ////////////////////////////////
+' Define some colors for the states. Totally optional.
+skinparam state {
+    ' pressed style:
+    BackgroundColor<<press_style>> #c7f1ff
+}
+
+' //////////////////////// STATE ORGANIZATION ///////////////////////
+' Note: StateSmith treats state names and events as case insensitive.
+' More info: https://github.com/StateSmith/StateSmith/wiki/PlantUML
+
+state RELEASED_DEBOUNCE
+state RELEASED_STABLE {
+    note "Wait for press" as N1
+}
+state PRESSED_DEBOUNCE <<press_style>>
+state PRESSED_STABLE <<press_style>> {
+    [*] -> CONFIRM_LONG
+    state CONFIRM_LONG
+    state PRESSED_LONG
+}
+
+[*] -> RELEASED_DEBOUNCE
+
+
+' ///////////////////////// STATE HANDLERS /////////////////////////
+' Syntax: https://github.com/StateSmith/StateSmith/wiki/Behaviors
+
+' RELEASED_DEBOUNCE. Wait for debounce time and then go to stable state.
+RELEASED_DEBOUNCE: enter / timer_ms = 0;
+RELEASED_DEBOUNCE: enter / press_status = false;
+RELEASED_DEBOUNCE -> RELEASED_STABLE: [ timer_ms > 50 ]
+
+' RELEASED_STABLE. Button is released. Wait for button press.
+RELEASED_STABLE -down-> PRESSED_DEBOUNCE: [ input_active ]
+
+' PRESSED_DEBOUNCE. Wait for debounce time and then go to stable state.
+PRESSED_DEBOUNCE: enter / timer_ms = 0;
+PRESSED_DEBOUNCE: enter / press_status = true;
+PRESSED_DEBOUNCE: enter / press_event = true;
+PRESSED_DEBOUNCE -left-> PRESSED_STABLE: [ timer_ms > 50 ]
+
+' PRESSED_STABLE. Button is pressed. Wait for button release.
+PRESSED_STABLE -up-> RELEASED_DEBOUNCE: [! input_active ] / release_event = true;
+
+' CONFIRM_LONG. Button is still pressed. Wait for long press time.
+CONFIRM_LONG --> PRESSED_LONG: [ timer_ms > 1000 ]
+
+' PRESSED_LONG. Button has been pressed for a long time.
+PRESSED_LONG: enter / long_event = true;
+PRESSED_LONG: enter / long_status = true;
+PRESSED_LONG: exit / long_status = false;
+
+
+' //////////////////////// StateSmith config ////////////////////////
+' The below special comment block sets the StateSmith configuration.
+' More info: https://github.com/StateSmith/StateSmith/issues/335
+
+/'! $CONFIG : toml
+SmRunnerSettings.transpilerId = "C99"
+
+RenderConfig.C.HFileUseExternC = true
+
+RenderConfig.C.HFileIncludes = """
+    #include <stdint.h> // for fixed width integer state machine variables below
+    """
+
+RenderConfig.AutoExpandedVars = """
+    // ----- INPUT/OUTPUT VARIABLES -----
+    // You **ADD** your loop delta time (ms since last loop) to this variable so it can be used for timing.
+    uint16_t timer_ms;
+
+    // ----- INPUT VARIABLES -----
+    // You **SET** this to 1 when button is detected as active, and 0 when inactive.
+    uint8_t input_active: 1;
+
+    // ----- OUTPUT EVENT VARIABLES -----
+    // You **READ** and **CLEAR** event flags in using code.
+    uint8_t release_event: 1;
+    uint8_t press_event: 1;
+    uint8_t long_event: 1;
+
+    // ----- OUTPUT STATUS VARIABLES -----
+    // You **READ** these flags in using code, but don't clear them.
+    uint8_t press_status: 1;
+    uint8_t long_status: 1;
+    """
+
+# Declare generated enumerations as "packed" for GCC. Often saves some RAM/flash. Not needed for C++11 transpiler.
+RenderConfig.C.CEnumDeclarer = "typedef enum __attribute__((packed)) {enumName}"
+'/
+@enduml

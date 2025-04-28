@@ -1,0 +1,68 @@
+@startuml ControllerSm
+
+' ///////////////////////////// STYLES /////////////////////////////
+' Define some colors for the states. Totally optional.
+skinparam state {
+  BackgroundColor<<parent_alias>> #f8ff95
+}
+
+' //////////////////////// STATE ORGANIZATION ///////////////////////
+' Note: StateSmith treats state names and events as case insensitive.
+' More info: https://github.com/StateSmith/StateSmith/wiki/PlantUML
+
+state DISARMED
+state ARMING
+state ARMED
+state ALARM_COUNTDOWN
+state ALARM_ACTIVE
+
+[*] -> DISARMED
+
+' ///////////////////////// STATE HANDLERS /////////////////////////
+' Syntax https://github.com/StateSmith/StateSmith/wiki/Behaviors
+
+' DISARMED
+DISARMED: enter / notify_disarmed();
+DISARMED --> ARMING: ARM
+
+' ARMING
+ARMING: enter / init_arming_countdown();
+ARMING: exit / clear_countdown();
+ARMING --> ARMED: [is_countdown_complete()]
+ARMING --> DISARMED: DISARM
+
+' ARMED
+ARMED: enter / notify_armed();
+ARMED --> ALARM_COUNTDOWN: [is_motion_detected()]
+ARMED --> DISARMED: DISARM
+
+' ALARM_COUNTDOWN
+ALARM_COUNTDOWN: enter / init_alarm_countdown();
+ALARM_COUNTDOWN: exit / clear_countdown();
+ALARM_COUNTDOWN --> ALARM_ACTIVE: [is_countdown_complete()]
+ALARM_COUNTDOWN --> DISARMED: DISARM
+
+' ALARM_ACTIVE
+ALARM_ACTIVE: enter / set_red_led(true);
+ALARM_ACTIVE: enter / notify_alarm();
+ALARM_ACTIVE: exit / set_red_led(false);
+ALARM_ACTIVE --> DISARMED: DISARM
+
+
+
+' //////////////////////// StateSmith config ////////////////////////
+' The below special comment block sets the StateSmith configuration.
+' More info: https://github.com/StateSmith/StateSmith/issues/335
+' Feel free to remove or modify it as needed.
+
+/'! $CONFIG : toml
+[RenderConfig.Cpp]
+BaseClassCode = "public ControllerBase"
+HFileIncludes = """
+    #include "ControllerBase.hpp"
+    """
+
+[SmRunnerSettings]
+transpilerId = "Cpp"
+'/
+@enduml

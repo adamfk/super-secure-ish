@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-arduino-nano", "id": "uno", "top": 200, "left": 20, "attrs": {} },
+    { "type": "wokwi-lcd1602", "id": "lcd", "top": -6.17, "left": -51.2, "attrs": {} },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 128.75,
+      "left": 144,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn5",
+      "top": 90.11,
+      "left": 317.79,
+      "rotate": 90,
+      "attrs": { "color": "cyan", "key": "ArrowLeft", "label": "back" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn6",
+      "top": 14.65,
+      "left": 370.22,
+      "rotate": 90,
+      "attrs": { "color": "blue", "key": "ArrowUp", "label": "up" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn7",
+      "top": 195.7,
+      "left": 386.7,
+      "rotate": 270,
+      "attrs": { "color": "purple", "key": "ArrowDown", "label": "down" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn8",
+      "top": 89.9,
+      "left": 419.9,
+      "rotate": 90,
+      "attrs": { "color": "green", "key": "ArrowRight", "label": "enter" }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": 175.2,
+      "left": 222.6,
+      "attrs": { "volume": "0.6" }
+    },
+    { "type": "wokwi-pir-motion-sensor", "id": "pir1", "top": 176.8, "left": -93.78, "attrs": {} },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 130.8,
+      "left": 253.8,
+      "attrs": { "color": "red", "flip": "1" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": 92.4,
+      "left": 253.8,
+      "attrs": { "color": "red", "flip": "1" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led3",
+      "top": 54,
+      "left": 253.8,
+      "attrs": { "color": "red", "flip": "1" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led4",
+      "top": 15.6,
+      "left": 253.8,
+      "attrs": { "color": "red", "flip": "1" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led5",
+      "top": -22.8,
+      "left": 253.8,
+      "attrs": { "color": "red", "flip": "1" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 72,
+      "left": 268.25,
+      "rotate": 90,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "text1",
+      "top": -38.4,
+      "left": 48,
+      "attrs": { "text": "resistors do nothing in wokwi. skipping for space." }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "text2",
+      "top": -38.4,
+      "left": 518.4,
+      "attrs": {
+        "text": "- Use the menu to ARM and DISARM the system.\n- When armed, trip the motion sensor.\n- buttons are mapped to keyboard arrows. Need to click a button first though.\n    - this allows holding buttons at the same time.\n- supported terminal commands 'a' = ARM, 'd' = DISARM, 'p' = PANIC\n\nMAIN MENU\n---- DISARM_SYSTEM\n-------- CONFIRM DISARM\n---- ARM_SYSTEM\n-------- CONFIRM ARM\n---- CONFIG\n-------- CHANGE_CODE\n------------ editing not implemented. Hold UP + DOWN keyboard keys to get to secret menu.\n---------------- SECRET MENU\n-------- ARMING_DELAY\n------------ editing not implemented\n-------- ALARM_DELAY\n------------ editing not implemented\n---- LIVE DATA VIEW\n-------- UPTIME\n-------- SENSOR STATUS"
+      }
+    }
+  ],
+  "connections": [
+    [ "uno:5V", "lcd:VDD", "red", [ "v16", "h-145.3", "v-134.4", "h62.17" ] ],
+    [ "uno:5V", "r1:2", "red", [ "v16", "h56.3", "v0", "h78" ] ],
+    [ "r1:1", "lcd:A", "pink", [] ],
+    [ "uno:12", "lcd:RS", "blue", [ "v-16", "*", "h0", "v20" ] ],
+    [ "uno:11", "lcd:E", "purple", [ "v-20", "*", "h0", "v20" ] ],
+    [ "uno:10", "lcd:D4", "green", [ "v-24", "*", "h0", "v20" ] ],
+    [ "uno:9", "lcd:D5", "brown", [ "v-28", "*", "h0", "v20" ] ],
+    [ "uno:8", "lcd:D6", "gold", [ "v-32", "*", "h0", "v20" ] ],
+    [ "uno:7", "lcd:D7", "gray", [ "v-36", "*", "h0", "v20" ] ],
+    [ "uno:GND.1", "btn5:2.r", "black", [ "v25.6", "h184.79" ] ],
+    [ "uno:GND.1", "btn6:2.r", "black", [ "v25.6", "h219.5", "v-209.85" ] ],
+    [ "uno:GND.1", "btn7:2.r", "black", [ "v25.6", "h219.5", "v-105.6", "h36.35" ] ],
+    [ "uno:GND.1", "btn8:2.r", "black", [ "v25.6", "h286.9" ] ],
+    [ "uno:GND.2", "lcd:VSS", "black", [ "v-51.2", "h-97.3" ] ],
+    [ "uno:GND.2", "lcd:RW", "black", [ "v-51.2", "h-49.3" ] ],
+    [ "uno:GND.2", "lcd:K", "black", [ "v-51.2", "h56.3" ] ],
+    [ "btn8:1.r", "uno:A2", "green", [ "v144.2", "h-336" ] ],
+    [ "btn7:1.r", "uno:A3", "purple", [ "v-19.4", "h-28.8", "v134.4", "h-249.6" ] ],
+    [ "btn6:1.r", "uno:A5", "blue", [ "v85.05", "h-55.92", "v153.6", "h-249.6" ] ],
+    [ "btn5:1.r", "uno:A4", "cyan", [ "v19.19", "h-13.59", "v153.6", "h-248.3" ] ],
+    [ "led1:A", "uno:2", "orange", [ "h-134.4", "v32" ] ],
+    [ "led1:C", "uno:GND.1", "black", [ "h57.2", "v115.2", "h-171.5" ] ],
+    [ "pir1:GND", "uno:GND.1", "black", [ "v19.2", "h202.64" ] ],
+    [ "pir1:VCC", "uno:5V", "red", [ "v9.6", "h202.9" ] ],
+    [ "pir1:OUT", "uno:A0", "magenta", [ "v28.8", "h116.36" ] ],
+    [ "led1:C", "led2:C", "black", [ "h9.2", "v-38.4" ] ],
+    [ "led2:C", "led3:C", "black", [ "v0", "h9.2", "v-38.4" ] ],
+    [ "led3:C", "led4:C", "black", [ "v0", "h9.2", "v-38.4" ] ],
+    [ "led4:C", "led5:C", "black", [ "v0", "h9.2", "v-38.4" ] ],
+    [ "led1:A", "led2:A", "orange", [ "v0", "h-9.6", "v-38.4" ] ],
+    [ "led2:A", "led3:A", "orange", [ "v0", "h-9.6", "v-38.4" ] ],
+    [ "led3:A", "led4:A", "orange", [ "v0", "h-9.6", "v-38.4" ] ],
+    [ "led4:A", "led5:A", "orange", [ "v0", "h-9.6", "v-38.4", "h9.6" ] ],
+    [ "uno:GND.1", "bz1:1", "black", [ "v25.6", "h85.1" ] ],
+    [ "uno:6", "bz1:2", "#8f4814", [ "v-12.8", "h113.9", "v76.8", "h48" ] ]
+  ],
+  "dependencies": {}
+}

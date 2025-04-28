@@ -1,0 +1,82 @@
+@startuml UiSm
+
+' ///////////////////////////// STYLES /////////////////////////////
+' Define some colors for the states. Totally optional.
+skinparam state {
+  BackgroundColor<<parent_alias>> #f8ff95
+}
+
+' We change the default font so that `->` looks like a real arrow.
+skinparam defaultFontName Consolas
+
+
+' //////////////////////// STATE ORGANIZATION ///////////////////////
+' Note: StateSmith treats state names and events as case insensitive.
+' More info: https://github.com/StateSmith/StateSmith/wiki/PlantUML
+
+[*] -> SPLASH_SCREEN
+
+state SPLASH_SCREEN
+state HOME
+state MENU {
+    [*] -> DISARM_SYSTEM
+    state DISARM_SYSTEM
+    state ARM_SYSTEM
+}
+
+
+' ///////////////////////// STATE HANDLERS /////////////////////////
+' Syntax https://github.com/StateSmith/StateSmith/wiki/Behaviors
+
+' SPLASH_SCREEN
+SPLASH_SCREEN: enter / lcd->SPLASH_SCREEN();
+SPLASH_SCREEN: enter / timeout_ms = 3*1000;
+SPLASH_SCREEN --> HOME : TIMEOUT
+
+' HOME
+HOME: enter / lcd->HOME();
+HOME --> MENU : ENTER_PRESS
+
+' MENU
+MENU: (enter, ANY_KEY) / timeout_ms = IDLE_TIMEOUT_MS;
+MENU --> HOME : (BACK_PRESS, TIMEOUT)
+
+    ' DISARM_SYSTEM
+    DISARM_SYSTEM: enter / lcd->DISARM_SYSTEM();
+    DISARM_SYSTEM: ENTER_PRESS / ctrl->disarm();
+    DISARM_SYSTEM -down-> ARM_SYSTEM: DOWN_PRESS
+
+    ' ARM_SYSTEM
+    ARM_SYSTEM: enter / lcd->ARM_SYSTEM();
+    ARM_SYSTEM: ENTER_PRESS / ctrl->arm();
+    ARM_SYSTEM --> DISARM_SYSTEM: UP_PRESS
+
+
+' //////////////////////// StateSmith config ////////////////////////
+' The below special comment block sets the StateSmith configuration.
+' More info: https://github.com/StateSmith/StateSmith/issues/335
+' Feel free to remove or modify it as needed.
+
+/'! $CONFIG : toml
+SmRunnerSettings.transpilerId = "Cpp"
+
+RenderConfig.AutoExpandedVars = """
+    Display* lcd;      // pointer because StateSmith doesn't support references (yet!)
+    Controller* ctrl;  // pointer because StateSmith doesn't support references (yet!)
+    Audio* audio;      // pointer because StateSmith doesn't support references (yet!)
+    int32_t timeout_ms; // Must be > 16 bits to allow for 60+ seconds.
+    """
+
+[RenderConfig.Cpp]
+HFileIncludes = """
+    #include "../audio/Audio.hpp"
+    #include "../control/Controller.hpp"
+    #include "Display.hpp"
+    #include <stdint.h>
+    """
+
+CFileIncludes = """
+    #define IDLE_TIMEOUT_MS (10 * 1000) // this works for C99 as well as C++11
+    """
+'/
+@enduml

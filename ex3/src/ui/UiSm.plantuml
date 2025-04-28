@@ -1,0 +1,231 @@
+@startuml UiSm
+
+' ///////////////////////////// STYLES /////////////////////////////
+' Define some colors for the states. Totally optional.
+skinparam state {
+  BackgroundColor<<parent_alias>> #f8ff95
+}
+
+' We change the default font so that `->` looks like a real arrow.
+skinparam defaultFontName Consolas
+
+
+' //////////////////////// STATE ORGANIZATION ///////////////////////
+' Note: StateSmith treats state names and events as case insensitive.
+' More info: https://github.com/StateSmith/StateSmith/wiki/PlantUML
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' The below PlantUML between AUTO_GENERATED_CODE tags is updated by the `menu-gen.py` script.
+' I've typically just hand coded (or drawn) these menu connections, but wanted to show an interesting
+' way to use PlantUML with StateSmith. Simple but time consuming menu wiring code can be generated.
+' There are a few other ways to efficiently create menus. One way is having a hand coded data driven 
+' menu FSM run from the main UI FSM. That works well too, but I don't have a public example of it yet.
+' TIP: PlantUML has support to include other files. The generated menu content could exist in another file.
+' See https://github.com/StateSmith/StateSmith/wiki/PlantUML#advanced-tips
+'<AUTO_GENERATED_CODE>
+    state MENU {
+        [*] -> MENU__DISARM_SYSTEM
+        state MENU__DISARM_SYSTEM
+        state MENU__ARM_SYSTEM
+        state MENU__CONFIG
+        state MENU__DATA
+    
+        state DISARM_SYSTEM
+        state ARM_SYSTEM
+        state CONFIG {
+            [*] -> CONFIG__CHANGE_CODE
+            state CONFIG__CHANGE_CODE
+            state CONFIG__ARMING_DELAY
+            state CONFIG__ALARM_DELAY
+    
+            state CHANGE_CODE
+            state ARMING_DELAY
+            state ALARM_DELAY
+        }
+        state DATA {
+            [*] -> UPTIME
+            state UPTIME
+            state SENSOR
+        }
+    }
+    
+    ' MENU
+    MENU__DISARM_SYSTEM -down-> MENU__ARM_SYSTEM : DOWN_PRESS
+    MENU__ARM_SYSTEM -down-> MENU__CONFIG : DOWN_PRESS
+    MENU__CONFIG -down-> MENU__DATA : DOWN_PRESS
+    MENU__DATA -up-> MENU__CONFIG : UP_PRESS
+    MENU__CONFIG -up-> MENU__ARM_SYSTEM : UP_PRESS
+    MENU__ARM_SYSTEM -up-> MENU__DISARM_SYSTEM : UP_PRESS
+    
+    ' DISARM_SYSTEM
+    MENU__DISARM_SYSTEM -right-> DISARM_SYSTEM : ENTER_PRESS
+    DISARM_SYSTEM -left-> MENU__DISARM_SYSTEM : BACK_PRESS
+    
+    ' ARM_SYSTEM
+    MENU__ARM_SYSTEM -right-> ARM_SYSTEM : ENTER_PRESS
+    ARM_SYSTEM -left-> MENU__ARM_SYSTEM : BACK_PRESS
+    
+    ' CONFIG
+    MENU__CONFIG -right-> CONFIG : ENTER_PRESS
+    CONFIG -left-> MENU__CONFIG : BACK_PRESS
+    CONFIG__CHANGE_CODE -down-> CONFIG__ARMING_DELAY : DOWN_PRESS
+    CONFIG__ARMING_DELAY -down-> CONFIG__ALARM_DELAY : DOWN_PRESS
+    CONFIG__ALARM_DELAY -up-> CONFIG__ARMING_DELAY : UP_PRESS
+    CONFIG__ARMING_DELAY -up-> CONFIG__CHANGE_CODE : UP_PRESS
+    
+    ' CHANGE_CODE
+    CONFIG__CHANGE_CODE -right-> CHANGE_CODE : ENTER_PRESS
+    CHANGE_CODE -left-> CONFIG__CHANGE_CODE : BACK_PRESS
+    
+    ' ARMING_DELAY
+    CONFIG__ARMING_DELAY -right-> ARMING_DELAY : ENTER_PRESS
+    ARMING_DELAY -left-> CONFIG__ARMING_DELAY : BACK_PRESS
+    
+    ' ALARM_DELAY
+    CONFIG__ALARM_DELAY -right-> ALARM_DELAY : ENTER_PRESS
+    ALARM_DELAY -left-> CONFIG__ALARM_DELAY : BACK_PRESS
+    
+    ' DATA
+    MENU__DATA -right-> DATA : ENTER_PRESS
+    DATA -left-> MENU__DATA : BACK_PRESS
+    UPTIME -down-> SENSOR : DOWN_PRESS
+    SENSOR -up-> UPTIME : UP_PRESS
+    
+    
+    'EVENT HANDLERS
+    DISARM_SYSTEM: enter / lcd->DISARM_SYSTEM();
+    MENU__DISARM_SYSTEM: enter / lcd->MENU__DISARM_SYSTEM();
+    ARM_SYSTEM: enter / lcd->ARM_SYSTEM();
+    MENU__ARM_SYSTEM: enter / lcd->MENU__ARM_SYSTEM();
+    MENU__CONFIG: enter / lcd->MENU__CONFIG();
+    CHANGE_CODE: enter / lcd->CHANGE_CODE();
+    CONFIG__CHANGE_CODE: enter / lcd->CONFIG__CHANGE_CODE();
+    ARMING_DELAY: enter / lcd->ARMING_DELAY();
+    CONFIG__ARMING_DELAY: enter / lcd->CONFIG__ARMING_DELAY();
+    ALARM_DELAY: enter / lcd->ALARM_DELAY();
+    CONFIG__ALARM_DELAY: enter / lcd->CONFIG__ALARM_DELAY();
+    MENU__DATA: enter / lcd->MENU__DATA();
+    UPTIME: enter / lcd->UPTIME();
+    SENSOR: enter / lcd->SENSOR();
+'</AUTO_GENERATED_CODE>
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+state "$parent_alias" as FSM_ROOT <<parent_alias>> {
+    note "This shape is an alias of the FSM root.\nThis node's behaviors apply to all states." as N1
+}
+
+state SPLASH_SCREEN
+state HOME
+state PANIC
+
+' This is really cool! We are adding a state to the python generated `CONFIG` state.
+' Very powerful. Code generation is really time consuming to add all the features that you may need
+' but we can get the best of both worlds here. Simple code gen and easy customization.
+' THIS WILL ONLY WORK CORRECTLY with ss.cli version 0.18.2 or later.
+state CONFIG {
+    state SECRET_MENU
+}
+
+[*] --> SPLASH_SCREEN
+
+
+
+' ///////////////////////// STATE HANDLERS /////////////////////////
+' Syntax https://github.com/StateSmith/StateSmith/wiki/Behaviors
+
+' FSM_ROOT
+' Remember that behaviors here apply to all states.
+FSM_ROOT --> PANIC: PANIC_BUTTON
+
+' SPLASH_SCREEN
+SPLASH_SCREEN: enter / lcd->SPLASH_SCREEN();
+SPLASH_SCREEN: enter / timeout_ms = 3*1000;
+SPLASH_SCREEN --> HOME : TIMEOUT
+
+' HOME
+HOME: (enter, REFRESH) / lcd->HOME();
+HOME: LCD_UPDATE / lcd->HOME_update();
+HOME --> MENU : ENTER_PRESS
+
+' MENU
+MENU: (enter, ANY_KEY) / timeout_ms = IDLE_TIMEOUT_MS;
+MENU --> HOME : (BACK_PRESS, BACK_HELD, TIMEOUT)
+
+    ' DISARM_SYSTEM
+    DISARM_SYSTEM --> HOME: ENTER_PRESS / ctrl->disarm();
+    
+    ' ARM_SYSTEM
+    ARM_SYSTEM --> HOME: ENTER_PRESS / ctrl->arm();
+
+    ' CONFIG
+
+        ' CHANGE_CODE
+        CHANGE_CODE -up-> SECRET_MENU: UP_DOWN_HELD
+
+        ' SECRET_MENU
+        SECRET_MENU: enter / lcd->SECRET_MENU();
+        SECRET_MENU: enter / audio->play_secret();
+        SECRET_MENU: LCD_UPDATE / lcd->SECRET_MENU_update();
+        SECRET_MENU: LCD_UPDATE / timeout_ms = IDLE_TIMEOUT_MS; /* disable timeout */
+        ' SECRET_MENU: (UP_PRESS, DOWN_PRESS, BACK_PRESS, ENTER_PRESS) / lcd->SECRET_MENU_button(event_id);
+        SECRET_MENU: ANY_PRESS / lcd->SECRET_MENU_button(event_id);
+
+    ' DATA
+    DATA: (enter, ANY_KEY) / timeout_ms = DATA_TIMEOUT_MS;
+    DATA: exit / timeout_ms = IDLE_TIMEOUT_MS;
+
+        ' UPTIME
+        UPTIME: LCD_UPDATE / lcd->UPTIME_update();
+
+        ' SENSOR
+        SENSOR: LCD_UPDATE / lcd->SENSOR_update();
+
+' PANIC
+PANIC: enter / lcd->PANIC();
+PANIC: enter / ctrl->panic();
+PANIC: enter / timeout_ms = 3*1000;
+PANIC --> HOME : TIMEOUT
+
+' //////////////////////// StateSmith config ////////////////////////
+' The below special comment block sets the StateSmith configuration.
+' More info: https://github.com/StateSmith/StateSmith/issues/335
+' Feel free to remove or modify it as needed.
+
+/'! $CONFIG : toml
+SmRunnerSettings.transpilerId = "Cpp"
+
+# Trigger map details: https://github.com/StateSmith/StateSmith/issues/161
+RenderConfig.TriggerMap = """
+    ANY_PRESS => UP_PRESS, DOWN_PRESS, BACK_PRESS, ENTER_PRESS
+    """
+
+RenderConfig.AutoExpandedVars = """
+    Display* lcd;      // pointer because StateSmith doesn't support references (yet!)
+    Controller* ctrl;  // pointer because StateSmith doesn't support references (yet!)
+    Audio* audio;      // pointer because StateSmith doesn't support references (yet!)
+    int32_t timeout_ms; // Must be > 16 bits to allow for 60+ seconds.
+    EventId event_id; // Optional. Manually set before dispatching event.
+"""
+
+[RenderConfig.Cpp]
+HFileIncludes = """
+    #include "../audio/Audio.hpp"
+    #include "../control/Controller.hpp"
+    #include <stdint.h>
+
+    // forward declare Display because of circular references. We store a pointer to it in the FSM variables section.
+    class Display;
+    """
+
+CFileIncludes = """
+    #include "Display.hpp"
+    #define IDLE_TIMEOUT_MS (10 * 1000) // this works for C99 as well as C++11
+    """
+
+ClassCode = """
+    private:
+        static const int32_t DATA_TIMEOUT_MS = 60 * 1000L; // C99 transpiler doesn't support 'ClassCode' section.
+    """
+'/
+@enduml
